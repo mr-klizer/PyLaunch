@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PyLaunch</title>
+<link rel="stylesheet" href="css/themes.css">
+<link rel="stylesheet" href="css/main.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body data-theme="midnight">
+
+<!-- ── FIRST RUN WIZARD ───────────────────────────────────────────────── -->
+<div id="wizard-overlay" class="wizard-overlay hidden">
+  <div class="wizard-container">
+    <div class="wizard-logo">
+      <span data-logo="icon" data-logo-size="52"></span>
+      <span>PyLaunch</span>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="wizard-step active" data-step="1">
+      <h1>Добро пожаловать!</h1>
+      <p class="wizard-subtitle">PyLaunch помогает запускать Python-программы — без знания программирования</p>
+      <div class="wizard-choice-grid">
+        <button class="wizard-choice" onclick="wizard.goTo(2, 'run')">
+          <div class="wc-icon">▶</div>
+          <div class="wc-title">Запустить готовую программу</div>
+          <div class="wc-desc">У меня уже есть программа, хочу её открыть</div>
+        </button>
+        <button class="wizard-choice" onclick="wizard.goTo(2, 'catalog')">
+          <div class="wc-icon">◼</div>
+          <div class="wc-title">Посмотреть каталог</div>
+          <div class="wc-desc">Хочу выбрать из готовых программ</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="wizard-step" data-step="2">
+      <h1>Проверяем Python</h1>
+      <p class="wizard-subtitle">Python — это движок, на котором работают все программы. Сейчас проверим, он у вас есть.</p>
+      <div id="wizard-python-check" class="python-check-area">
+        <div class="checking-indicator">
+          <div class="spinner"></div>
+          <span>Проверяем...</span>
+        </div>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn-ghost" onclick="wizard.goTo(1)">← Назад</button>
+        <button class="btn-primary" id="wizard-next-2" onclick="wizard.goTo(3)" disabled>Далее →</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="wizard-step" data-step="3">
+      <h1>Выберите папку для программ</h1>
+      <p class="wizard-subtitle">PyLaunch будет хранить ваши программы в этой папке</p>
+      <div class="folder-picker">
+        <input type="text" id="wizard-folder-path" class="folder-input" placeholder="Папка для программ..." readonly>
+        <button class="btn-outline" onclick="wizard.pickFolder()">Выбрать...</button>
+      </div>
+      <p class="hint-text">По умолчанию: Документы / PyLaunch Programs</p>
+      <div class="wizard-nav">
+        <button class="btn-ghost" onclick="wizard.goTo(2)">← Назад</button>
+        <button class="btn-primary" onclick="wizard.goTo(4)">Далее →</button>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="wizard-step" data-step="4">
+      <h1>Всё готово!</h1>
+      <p class="wizard-subtitle">PyLaunch настроен и готов к работе</p>
+      <div class="setup-summary" id="wizard-summary"></div>
+      <div class="wizard-nav" style="justify-content: center; margin-top: 2rem;">
+        <button class="btn-primary btn-large" onclick="wizard.finish()">Начать работу →</button>
+      </div>
+    </div>
+
+    <!-- Progress dots -->
+    <div class="wizard-dots">
+      <span class="dot active" data-step="1"></span>
+      <span class="dot" data-step="2"></span>
+      <span class="dot" data-step="3"></span>
+      <span class="dot" data-step="4"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN APP ───────────────────────────────────────────────────────── -->
+<div id="app" class="app-shell hidden">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span data-logo="icon" data-logo-size="34"></span>
+      <span class="logo-text">PyLaunch</span>
+    </div>
+
+    <ul class="nav-items">
+      <li class="nav-item active" data-page="catalog" onclick="nav.show('catalog')">
+        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg></span>
+        <span>Каталог программ</span>
+      </li>
+      <li class="nav-item" data-page="import" onclick="nav.show('import')">
+        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 2L11 7H8.5V12H5.5V7H3L7 2Z"/></svg></span>
+        <span>Добавить программу</span>
+      </li>
+      <li class="nav-item" data-page="python" onclick="nav.show('python')">
+        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="7" r="2.5"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M3.22 3.22l1.41 1.41M9.37 9.37l1.41 1.41M3.22 10.78l1.41-1.41M9.37 4.63l1.41-1.41" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></span>
+        <span>Версии Python</span>
+      </li>
+      <li class="nav-item" data-page="settings" onclick="nav.show('settings')">
+        <span class="nav-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M7 4.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM5.5 7a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"/><path d="M7 1a.75.75 0 01.75.75v.8a4.5 4.5 0 011.7.7l.57-.57a.75.75 0 011.06 1.06l-.57.57c.3.52.52 1.1.7 1.7h.8a.75.75 0 010 1.5h-.8a4.5 4.5 0 01-.7 1.7l.57.57a.75.75 0 01-1.06 1.06l-.57-.57a4.5 4.5 0 01-1.7.7v.8a.75.75 0 01-1.5 0v-.8a4.5 4.5 0 01-1.7-.7l-.57.57a.75.75 0 01-1.06-1.06l.57-.57a4.5 4.5 0 01-.7-1.7h-.8a.75.75 0 010-1.5h.8c.18-.6.4-1.18.7-1.7l-.57-.57a.75.75 0 011.06-1.06l.57.57a4.5 4.5 0 011.7-.7v-.8A.75.75 0 017 1z"/></svg></span>
+        <span>Настройки</span>
+      </li>
+    </ul>
+
+    <div class="sidebar-bottom">
+      <div class="sys-badge" id="sys-python-badge">Python не найден</div>
+    </div>
+  </nav>
+
+  <!-- Main content area -->
+  <main class="main-content">
+
+    <!-- ── PAGE: Catalog ── -->
+    <section id="page-catalog" class="page active">
+      <div class="page-header">
+        <div>
+          <h1>Каталог программ</h1>
+          <p class="page-subtitle">Ваши установленные и готовые к запуску программы</p>
+        </div>
+        <div class="header-actions">
+          <input type="text" class="search-input" placeholder="Поиск программы..." oninput="catalog.search(this.value)" id="catalog-search">
+          <button class="btn-primary" onclick="nav.show('import')">+ Добавить</button>
+        </div>
+      </div>
+
+      <div id="catalog-empty" class="empty-state hidden">
+        <div class="empty-icon">◼</div>
+        <h2>Программ пока нет</h2>
+        <p>Добавьте первую программу из папки, ZIP-архива или .py файла</p>
+        <button class="btn-primary" onclick="nav.show('import')">Добавить программу</button>
+      </div>
+
+      <div id="catalog-grid" class="cards-grid"></div>
+    </section>
+
+    <!-- ── PAGE: Import ── -->
+    <section id="page-import" class="page">
+      <div class="page-header">
+        <div>
+          <h1>Добавить программу</h1>
+          <p class="page-subtitle">Импортируйте программу из разных источников</p>
+        </div>
+      </div>
+
+      <div class="import-options">
+        <div class="import-card" onclick="importer.fromFolder()">
+          <div class="import-icon">📁</div>
+          <h3>Папка с программой</h3>
+          <p>Укажите папку, где лежат файлы программы</p>
+          <button class="btn-outline">Выбрать папку</button>
+        </div>
+        <div class="import-card" onclick="importer.fromZip()">
+          <div class="import-icon">🗜</div>
+          <h3>ZIP-архив</h3>
+          <p>Распакуем архив и подготовим программу автоматически</p>
+          <button class="btn-outline">Выбрать архив</button>
+        </div>
+        <div class="import-card" onclick="importer.fromPy()">
+          <div class="import-icon">📄</div>
+          <h3>Один Python-файл</h3>
+          <p>Простая программа в одном файле .py</p>
+          <button class="btn-outline">Выбрать файл</button>
+        </div>
+      </div>
+
+      <div id="import-progress" class="import-progress hidden">
+        <div class="progress-card">
+          <div class="spinner-large"></div>
+          <div>
+            <div class="progress-title" id="import-progress-title">Обрабатываем...</div>
+            <div class="progress-sub" id="import-progress-sub"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PAGE: Python ── -->
+    <section id="page-python" class="page">
+      <div class="page-header">
+        <div>
+          <h1>Версии Python</h1>
+          <p class="page-subtitle">Движок, на котором работают программы</p>
+        </div>
+        <button class="btn-outline" onclick="pythonMgr.refresh()">Обновить список</button>
+      </div>
+
+      <div id="python-versions-list" class="versions-list"></div>
+
+      <!-- Install guide -->
+      <div class="install-guide">
+
+        <div class="ig-header">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <circle cx="9" cy="9" r="8" stroke="var(--accent)" stroke-width="1.5"/>
+            <path d="M9 8v5M9 6v.5" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>Как установить Python — пошаговая инструкция</span>
+          <button class="ig-toggle" onclick="pythonMgr.toggleGuide(this)">Свернуть ▲</button>
+        </div>
+
+        <div class="ig-body" id="python-guide-body">
+
+          <div class="ig-step">
+            <div class="ig-step-num">1</div>
+            <div class="ig-step-content">
+              <div class="ig-step-title">Выберите версию и нажмите кнопку скачать</div>
+              <div class="ig-step-desc">
+                Рекомендуем <strong>Python 3.11</strong> — самая стабильная версия, с ней работает большинство программ.
+                Нажмите нужную кнопку ниже — откроется страница загрузки на официальном сайте python.org в вашем браузере.
+              </div>
+              <div class="version-tiles" id="python-download-tiles"></div>
+            </div>
+          </div>
+
+          <div class="ig-step">
+            <div class="ig-step-num">2</div>
+            <div class="ig-step-content">
+              <div class="ig-step-title">На сайте найдите файл для Windows</div>
+              <div class="ig-step-desc">
+                Прокрутите страницу вниз до раздела <strong>«Files»</strong>. Найдите строку
+                <code>Windows installer (64-bit)</code> и нажмите на неё — начнётся скачивание файла
+                с расширением <code>.exe</code> весом около 25 МБ.
+              </div>
+              <div class="ig-tip">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1L8 5h4l-3.5 2.5 1.5 4L6.5 9 3 11.5l1.5-4L1 5h4z" fill="var(--warning)"/></svg>
+                Если у вас 32-битная Windows (редкость) — выбирайте <code>Windows installer (32-bit)</code>
+              </div>
+            </div>
+          </div>
+
+          <div class="ig-step">
+            <div class="ig-step-num">3</div>
+            <div class="ig-step-content">
+              <div class="ig-step-title">Запустите скачанный файл</div>
+              <div class="ig-step-desc">
+                Откройте скачанный файл (<code>python-3.11.x-amd64.exe</code>).
+                Windows может спросить разрешение — нажмите <strong>«Да»</strong>.
+              </div>
+              <div class="ig-warn">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L13 12H1L7 1Z" stroke="var(--danger)" stroke-width="1.2"/><path d="M7 5v3M7 10v.5" stroke="var(--danger)" stroke-width="1.2" stroke-linecap="round"/></svg>
+                <strong>Важно!</strong> В первом окне установщика обязательно поставьте галочку
+                <strong>«Add Python to PATH»</strong> — без неё программы не найдут Python.
+              </div>
+            </div>
+          </div>
+
+          <div class="ig-step">
+            <div class="ig-step-num">4</div>
+            <div class="ig-step-content">
+              <div class="ig-step-title">Нажмите «Install Now»</div>
+              <div class="ig-step-desc">
+                Установка занимает 1–2 минуты. После появится сообщение
+                <strong>«Setup was successful»</strong> — Python установлен.
+              </div>
+            </div>
+          </div>
+
+          <div class="ig-step">
+            <div class="ig-step-num">5</div>
+            <div class="ig-step-content">
+              <div class="ig-step-title">Вернитесь в PyLaunch и нажмите «Обновить список»</div>
+              <div class="ig-step-desc">
+                После установки нажмите кнопку <strong>«Обновить список»</strong> в правом верхнем углу этой страницы.
+                Новая версия Python появится в списке выше — выберите её кнопкой <strong>«Выбрать»</strong>.
+              </div>
+            </div>
+          </div>
+
+          <div class="ig-step">
+            <div class="ig-step-num">6</div>
+            <div class="ig-step-content">
+              <div class="ig-step-title">Подготовьте программу к запуску</div>
+              <div class="ig-step-desc">
+                Теперь перейдите в <strong>«Каталог программ»</strong>, найдите нужную программу и нажмите
+                <strong>«Подготовить»</strong> — PyLaunch автоматически установит все необходимые компоненты.
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /ig-body -->
+      </div><!-- /install-guide -->
+    </section>
+
+    <!-- ── PAGE: Settings ── -->
+    <section id="page-settings" class="page">
+      <div class="page-header">
+        <h1>Настройки</h1>
+      </div>
+
+      <div class="settings-sections">
+
+        <div class="settings-section">
+          <h3>Внешний вид</h3>
+          <p class="settings-desc">Выберите тему оформления</p>
+          <div class="theme-grid" id="theme-grid"></div>
+        </div>
+
+        <div class="settings-section">
+          <h3>Папка программ</h3>
+          <p class="settings-desc">Где хранятся ваши программы</p>
+          <div class="folder-picker">
+            <input type="text" id="settings-projects-dir" class="folder-input" readonly>
+            <button class="btn-outline" onclick="settings.pickProjectsDir()">Изменить...</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>О программе</h3>
+          <div class="about-info" id="about-info"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ── ERROR MODAL ──────────────────────────────────────────────────────── -->
+<div id="error-modal" class="modal-overlay hidden">
+  <div class="modal-box error-modal">
+    <div class="error-icon">!</div>
+    <h2 id="error-modal-title">Что-то пошло не так</h2>
+    <p id="error-modal-message"></p>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="modals.closeError()">Закрыть</button>
+      <button class="btn-primary" id="error-modal-action-btn" style="display:none" onclick="modals.errorAction()"></button>
+    </div>
+    <details class="error-details">
+      <summary>Технические подробности</summary>
+      <pre id="error-modal-raw"></pre>
+    </details>
+  </div>
+</div>
+
+<!-- ── README MODAL ─────────────────────────────────────────────────────────── -->
+<div id="readme-modal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:680px;max-height:80vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 id="readme-modal-title">README</h2>
+      <button class="btn-ghost" onclick="readmeViewer.close()" style="font-size:18px;padding:4px 10px">&#10005;</button>
+    </div>
+    <div id="readme-content" class="md-body">
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn-ghost" onclick="readmeViewer.close()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DELETE CONFIRM MODAL ────────────────────────────────────────────────── -->
+<div id="delete-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div style="font-size:32px;margin-bottom:14px;">🗑</div>
+    <h2>Удалить программу?</h2>
+    <p id="delete-modal-name" style="font-weight:600;color:var(--text-primary);margin-bottom:8px;"></p>
+    <p>Выберите, что именно удалить:</p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin:20px 0;">
+      <button class="btn-outline" style="text-align:left;padding:14px 18px;" onclick="modals.confirmDelete(false)">
+        <div style="font-weight:600;margin-bottom:3px;">Только из списка</div>
+        <div style="font-size:12px;color:var(--text-muted)">Файлы программы останутся на диске</div>
+      </button>
+      <button class="btn-danger" style="text-align:left;padding:14px 18px;font-size:13px;" onclick="modals.confirmDelete(true)">
+        <div style="font-weight:600;margin-bottom:3px;">Удалить вместе с файлами</div>
+        <div style="font-size:12px;opacity:0.7">Папка программы будет удалена с диска навсегда</div>
+      </button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="modals.closeDelete()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ENTRY POINT PICKER ───────────────────────────────────────────────── -->
+<div id="entry-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h2 id="entry-modal-title">Какой файл запустить?</h2>
+    <p id="entry-modal-sub">Не удалось автоматически определить главный файл программы. Выберите его из списка:</p>
+    <div id="entry-file-list" class="file-list"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="modals.closeEntry()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ─────────────────────────────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ── COPY/LINK CHOICE MODAL ──────────────────────────────────────────────── -->
+<div id="copy-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h2>Как добавить программу?</h2>
+    <p>Программа: <strong id="copy-modal-name"></strong></p>
+    <div style="display:flex;flex-direction:column;gap:12px;margin:20px 0">
+
+      <button class="copy-choice-btn" onclick="importer.chooseCopy(true)">
+        <div class="copy-choice-icon">&#128190;</div>
+        <div class="copy-choice-text">
+          <div class="copy-choice-title">Создать резервную копию</div>
+          <div class="copy-choice-desc">
+            PyLaunch скопирует программу в свою папку.<br>
+            Оригинал останется нетронутым. Рекомендуется.
+          </div>
+        </div>
+      </button>
+
+      <button class="copy-choice-btn" onclick="importer.chooseCopy(false)">
+        <div class="copy-choice-icon">&#128279;</div>
+        <div class="copy-choice-text">
+          <div class="copy-choice-title">Запускать из исходной папки</div>
+          <div class="copy-choice-desc">
+            PyLaunch запомнит путь и будет запускать программу там, где она лежит.<br>
+            Если папку переместить — программа перестанет работать.
+          </div>
+        </div>
+      </button>
+
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="importer.closeCopyModal()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── BANNER MODAL ──────────────────────────────────────────────────────── -->
+<div id="banner-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h2>Баннер программы</h2>
+    <p id="banner-modal-project" style="font-weight:600;color:var(--accent);margin-bottom:12px;font-size:15px;"></p>
+    <div class="banner-modal-preview" id="banner-modal-preview" onclick="bannerEditor.pickImage()">
+      <div class="banner-modal-placeholder">
+        Нажмите, чтобы выбрать изображение<br>
+        <span style="font-size:11px;opacity:.6">PNG, JPG, WEBP — рекомендуется 800×450</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost"   onclick="bannerEditor.close()">Отмена</button>
+      <button class="btn-danger"  onclick="bannerEditor.removeBanner()">Удалить баннер</button>
+      <button class="btn-primary" onclick="bannerEditor.save()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="js/logo.js"></script>
+<script src="js/api.js"></script>
+<script src="js/themes.js"></script>
+<script src="js/wizard.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/importer.js"></script>
+<script src="js/python-mgr.js"></script>
+<script src="js/settings-page.js"></script>
+<script src="js/modals.js"></script>
+<script src="js/banner-editor.js"></script>
+<script src="js/readme-viewer.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
