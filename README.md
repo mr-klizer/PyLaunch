@@ -18,6 +18,7 @@
 pip install pywebview
 python main.py
 ```
+Или перейдите на [страницу скачивания готовых файлов](https://github.com/mr-klizer/PyLaunch/tree/main/downloads).
 
 ## Требования
 
