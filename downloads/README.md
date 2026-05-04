@@ -30,7 +30,7 @@
 
 
 # Файлы установки
-| Версия | Статус | Файлы |
-| :---: | :---: | :---: |
-| PyLaunch 1.0.0 | ✅Стабильная | [PyLaunch_1.0.0.exe](https://github.com/mr-klizer/PyLaunch/blob/main/downloads/PyLaunch.exe) |
-| PyLaunch 1.?.? | ❌Не готова | - |
+| Версия | Операционная система | Статус | Файлы |
+| :---: | :---: | :---: | :---: |
+| PyLaunch 1.0.0 | Windows | ✅Стабильная | [PyLaunch_1.0.0.exe](https://github.com/mr-klizer/PyLaunch/blob/main/downloads/PyLaunch_1-0-0.exe) |
+| PyLaunch 1.?.? | ? | ❌Не готова | - |
